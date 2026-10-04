@@ -68,28 +68,24 @@
       return
     }
 
-    const size = props.logo.size!
+    const logoSize = props.logo.size! * cellSize.value
 
     const viewBox = props.logo.svgSource?.match(/viewBox="([^"]+)"/)?.[1] || undefined
     const [rawSvgWidth, rawSvgHeight] = viewBox?.split(' ').slice(2) || []
     const svgWidth = parseFloat(rawSvgWidth || '') || 0
     const svgHeight = parseFloat(rawSvgHeight || '') || 0
-    const scale = size / Math.max(svgWidth, svgHeight)
-
-    const svgSource = props.logo.svgSource?.replace(/<svg([^>]*)>/, (
-      `<svg$1 transform="translate(${
-        svgWidth > svgHeight ? 0 : (size - svgWidth * scale) / 2
-      } ${
-        svgWidth > svgHeight ? (size - svgHeight * scale) / 2 : 0
-      }) scale(${scale})" transform-origin="0 0">`
-    ))
+    const svgScale = logoSize / Math.max(svgWidth, svgHeight)
 
     return {
-      size,
+      size: logoSize,
       margin: props.logo.margin || 0,
       url: props.logo.url,
-      svgSource,
-      viewBox
+      svg: props.logo.svgSource && {
+        source: props.logo.svgSource,
+        x: (size.value - logoSize) / 2 + (svgWidth > svgHeight ? 0 : (logoSize - svgWidth * svgScale) / 2),
+        y: (size.value - logoSize) / 2 + (svgWidth > svgHeight ? (logoSize - svgHeight * svgScale) / 2 : 0),
+        scale: svgScale
+      }
     }
   })
 
@@ -107,7 +103,7 @@
       return 0
     }
 
-    return Math.ceil(logo.value.size + logo.value.margin * 2)
+    return Math.ceil(logo.value.size / cellSize.value + logo.value.margin * 2)
   })
 
   const margin = computed(() => (
@@ -234,12 +230,12 @@
       <symbol :id="id('corner')">
         <path :d="cornerPath"/>
       </symbol>
-      <symbol
+      <!-- <symbol
         v-if="logo?.svgSource"
         v-html="logo.svgSource"
         :id="id('logo')"
         :viewBox="logo.viewBox"
-      />
+      /> -->
     </defs>
     <rect
       v-if="background.opacity > 0"
@@ -305,21 +301,19 @@
         ...(margin > 0 ? { transform: `translate(${margin} ${margin})` } : null)
       }"
     />
-    <use
-      v-if="logo?.svgSource"
-      :href="`#${id('logo')}`"
-      :width="logo.size"
-      :height="logo.size"
-      :x="(size - logo.size) / 2"
-      :y="(size - logo.size) / 2"
+
+    <g
+      v-if="logo?.svg"
+      v-html="logo.svg.source"
+      :transform="`translate(${logo.svg.x} ${logo.svg.y}) scale(${logo.svg.scale})`"
     />
     <image
       v-else-if="logo?.url"
       :href="logo.url"
-      :width="logo.size * cellSize"
-      :height="logo.size * cellSize"
-      :x="(size - logo.size * cellSize) / 2"
-      :y="(size - logo.size * cellSize) / 2"
+      :width="logo.size"
+      :height="logo.size"
+      :x="(size - logo.size) / 2"
+      :y="(size - logo.size) / 2"
     />
   </svg>
 </template>
