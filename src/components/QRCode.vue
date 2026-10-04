@@ -230,12 +230,6 @@
       <symbol :id="id('corner')">
         <path :d="cornerPath"/>
       </symbol>
-      <!-- <symbol
-        v-if="logo?.svgSource"
-        v-html="logo.svgSource"
-        :id="id('logo')"
-        :viewBox="logo.viewBox"
-      /> -->
     </defs>
     <rect
       v-if="background.opacity > 0"
